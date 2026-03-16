@@ -282,10 +282,4 @@ if __name__ == "__main__":
     print("   GET /api/maps - Get map configurations")
     print("   GET /docs - API documentation")
     
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=3001,
-        reload=True,
-        log_level="info"
-    )
+    app = FastAPI()
