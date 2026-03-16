@@ -7,6 +7,7 @@ from datetime import datetime
 from data_service import preprocess_all_data, MAP_CONFIGS
 import os
 from dotenv import load_dotenv
+import threading 
 
 load_dotenv()
 
@@ -33,22 +34,22 @@ processed_data = {
     "heatmaps": {}
 }
 
+import threading
+
 @app.on_event("startup")
 async def startup_event():
-    """Initialize server and preprocess data"""
-    global processed_data
-    
-    print('🚀 Starting LILA BLACK Data Server...')
-    print('📊 Preprocessing parquet data...')
-    
-    try:
-        processed_data = preprocess_all_data()
-        print(f'✅ Data preprocessing complete!')
-        print(f'📈 Loaded {len(processed_data["matches"])} matches')
-        print(f'🗺️  Generated heatmaps for {len(processed_data["heatmaps"])} maps')
-    except Exception as error:
-        print(f'❌ Error preprocessing data: {error}')
-        raise
+    def load_data():
+        global processed_data
+        print("🚀 Starting LILA BLACK Data Server...")
+        print("📊 Preprocessing parquet data...")
+
+        try:
+            processed_data = preprocess_all_data()
+            print(f"✅ Loaded {len(processed_data['matches'])} matches")
+        except Exception as error:
+            print(f"❌ Error preprocessing data: {error}")
+
+    threading.Thread(target=load_data).start()
 
 @app.get("/")
 async def root():
@@ -272,14 +273,3 @@ async def health_check():
         "matches": len(processed_data["matches"]),
         "timestamp": datetime.now().isoformat()
     }
-
-if __name__ == "__main__":
-    print("🌐 Starting FastAPI server...")
-    print("📡 API endpoints will be available at:")
-    print("   GET /api/matches - List all matches")
-    print("   GET /api/events/{match_id} - Get match events")
-    print("   GET /api/heatmap/{map_id} - Get heatmap data")
-    print("   GET /api/maps - Get map configurations")
-    print("   GET /docs - API documentation")
-    
-    app = FastAPI()
